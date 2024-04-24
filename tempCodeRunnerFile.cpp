@@ -168,30 +168,6 @@ public:
         return -1;
     }
 };
-class item
-{
-public:
-    int id;
-    string name;
-    int deadline;
-    int profit;
-    int weight;
-
-    item(int i, string n, int d, int p, int w)
-    {
-        id = i;
-        name = n;
-        deadline = d;
-        profit = p;
-        weight = w;
-    }
-    void calculateProductionInventoryDeadline(const vector<item> &items, ofstream &outputFile);
-    void calculateProductionInventoryCapacity(const vector<item> &items, int capacity, ofstream &outputFile);
-    void calculateProductionInventoryDeadlineandCapacity(vector<item> &items, ofstream &outputFile);
-    
-    
-};
-
 struct MinHeapNode
 {
     char data;
@@ -302,157 +278,8 @@ void compressTextFile(const vector<item> &inputVector, ofstream &outputFile, str
     cout << "Text has been compressed and saved to " << FileName << ".txt" << endl;
     outputFile.close();
 }
-void item:: calculateProductionInventoryCapacity(const vector<item> &items, int capacity, ofstream &outputFile)
-    {
-        int n = items.size();
-        vector<vector<int>> dp(n + 1, vector<int>(capacity + 1, 0));
 
-        for (int i = 1; i <= n; ++i)
-        {
-            for (int w = 1; w <= capacity; ++w)
-            {
-                if (items[i - 1].weight > w)
-                {
-                    dp[i][w] = dp[i - 1][w];
-                }
-                else
-                {
-                    dp[i][w] = max(dp[i - 1][w], items[i - 1].profit + dp[i - 1][w - items[i - 1].weight]);
-                }
-            }
-        }
 
-        vector<item> selectedItems;
-        int remainingCapacity = capacity;
-
-        for (int i = n; i > 0 && remainingCapacity > 0; --i)
-        {
-            if (dp[i][remainingCapacity] != dp[i - 1][remainingCapacity])
-            {
-                selectedItems.push_back(items[i - 1]);
-                remainingCapacity -= items[i - 1].weight;
-            }
-        }
-
-        cout << "\nItems selected for production scheduling based on capacity:\n";
-        for (const auto &idx : selectedItems)
-        {
-            cout << "Item " << idx.id << " (Weight: " << idx.weight << ", Profit: " << idx.profit << ", Deadline: " << idx.deadline << ")\n";
-        }
-        cout << "Save data to log?(y/n)" << endl;
-        char x;
-        cin >> x;
-        if (x == 'y')
-        {
-            vector<int> data;
-            for (const auto &idx : selectedItems)
-            {
-                data.push_back(idx.id);
-            }
-            compressTextFile(selectedItems, outputFile, "output");
-        }
-        else
-        {
-            cout << "Data not saved!" << endl;
-        }
-    }
-    
-void item:: calculateProductionInventoryDeadlineandCapacity(vector<item> &items, ofstream &outputFile)
-    {
-        int n = items.size();
-        vector<pair<int, pair<int, int>>> sortedItems;
-
-        for (int i = 0; i < n; ++i)
-        {
-            sortedItems.push_back({items[i].deadline, {items[i].weight, items[i].profit}});
-        }
-
-        sort(sortedItems.begin(), sortedItems.end());
-
-        vector<bool> filled(n, false);
-        vector<item> filledItems;
-        int totalProfit = 0;
-
-        cout << "\nItems selected for production scheduling based on deadlines:\n";
-        for (int i = 0; i < n; ++i)
-        {
-            int deadline = sortedItems[i].first;
-            int weight = sortedItems[i].second.first;
-            int profit = sortedItems[i].second.second;
-
-            for (int j = min(n, deadline) - 1; j >= 0; --j)
-            {
-                if (!filled[j])
-                {
-                    filled[j] = true;
-                    totalProfit += profit;
-                    filledItems.push_back(items[i]);
-                    cout << "Item " << items[i].id << " (Weight: " << weight << ", Profit: " << profit << ", Deadline: " << deadline << ")\n";
-                    break;
-                }
-            }
-        }
-        cout << "Now calculating the items that can be transported today based on capacity" << endl;
-        int capacity;
-        cout << "Enter capacity: ";
-        cin >> capacity;
-
-        calculateProductionInventoryCapacity(filledItems, capacity, outputFile);
-    }
-void item:: calculateProductionInventoryDeadline(const vector<item> &items, ofstream &outputFile)
-    {
-        int n = items.size();
-        vector<pair<int, pair<int, int>>> sortedItems;
-
-        for (int i = 0; i < n; ++i)
-        {
-            sortedItems.push_back({items[i].deadline, {items[i].weight, items[i].profit}});
-        }
-
-        sort(sortedItems.begin(), sortedItems.end());
-
-        vector<bool> filled(n, false);
-        vector<item> filledItems;
-        int totalProfit = 0;
-
-        cout << "\nItems selected for production scheduling based on deadlines:\n";
-        for (int i = 0; i < n; ++i)
-        {
-            int deadline = sortedItems[i].first;
-            int weight = sortedItems[i].second.first;
-            int profit = sortedItems[i].second.second;
-
-            for (int j = min(n, deadline) - 1; j >= 0; --j)
-            {
-                if (!filled[j])
-                {
-                    filled[j] = true;
-                    totalProfit += profit;
-                    filledItems.push_back(items[i]);
-                    cout << "Item " << items[i].id << " (Weight: " << weight << ", Profit: " << profit << ", Deadline: " << deadline << ")\n";
-                    break;
-                }
-            }
-        }
-        cout << "Total Profit: " << totalProfit << "\n\n";
-        cout << "Save data to log?(y/n)" << endl;
-        char x;
-        cin >> x;
-        if (x == 'y')
-        {
-            vector<int> data;
-            for (auto i : filledItems)
-            {
-                int id = i.id;
-                data.push_back(id);
-            }
-            compressTextFile(filledItems, outputFile, "output");
-        }
-        else
-        {
-            cout << "Data not saved!" << endl;
-        }
-    }
 string readEncodedTextFromFile(const string &fileName)
 {
     ifstream inputFile(fileName);
@@ -540,6 +367,178 @@ unordered_map<string, char> readHuffmanCodesFromFile(const string &fileName)
     huffmanFile.close();
     return huffmanCodeMap;
 }
+
+class item
+{
+public:
+    int id;
+    string name;
+    int deadline;
+    int profit;
+    int weight;
+
+    item(int i, string n, int d, int p, int w)
+    {
+        id = i;
+        name = n;
+        deadline = d;
+        profit = p;
+        weight = w;
+    }
+
+    void calculateProductionInventoryDeadline(const vector<item> &items, ofstream &outputFile)
+    {
+        int n = items.size();
+        vector<pair<int, pair<int, int>>> sortedItems;
+
+        for (int i = 0; i < n; ++i)
+        {
+            sortedItems.push_back({items[i].deadline, {items[i].weight, items[i].profit}});
+        }
+
+        sort(sortedItems.begin(), sortedItems.end());
+
+        vector<bool> filled(n, false);
+        vector<item> filledItems;
+        int totalProfit = 0;
+
+        cout << "\nItems selected for production scheduling based on deadlines:\n";
+        for (int i = 0; i < n; ++i)
+        {
+            int deadline = sortedItems[i].first;
+            int weight = sortedItems[i].second.first;
+            int profit = sortedItems[i].second.second;
+
+            for (int j = min(n, deadline) - 1; j >= 0; --j)
+            {
+                if (!filled[j])
+                {
+                    filled[j] = true;
+                    totalProfit += profit;
+                    filledItems.push_back(items[i]);
+                    cout << "Item " << items[i].id << " (Weight: " << weight << ", Profit: " << profit << ", Deadline: " << deadline << ")\n";
+                    break;
+                }
+            }
+        }
+        cout << "Total Profit: " << totalProfit << "\n\n";
+        cout << "Save data to log?(y/n)" << endl;
+        char x;
+        cin >> x;
+        if (x == 'y')
+        {
+            vector<int> data;
+            for (auto i : filledItems)
+            {
+                int id = i.id;
+                data.push_back(id);
+            }
+            compressTextFile(filledItems, outputFile, "output");
+        }
+        else
+        {
+            cout << "Data not saved!" << endl;
+        }
+    }
+    void calculateProductionInventoryCapacity(const vector<item> &items, int capacity, ofstream &outputFile)
+    {
+        int n = items.size();
+        vector<vector<int>> dp(n + 1, vector<int>(capacity + 1, 0));
+
+        for (int i = 1; i <= n; ++i)
+        {
+            for (int w = 1; w <= capacity; ++w)
+            {
+                if (items[i - 1].weight > w)
+                {
+                    dp[i][w] = dp[i - 1][w];
+                }
+                else
+                {
+                    dp[i][w] = max(dp[i - 1][w], items[i - 1].profit + dp[i - 1][w - items[i - 1].weight]);
+                }
+            }
+        }
+
+        vector<item> selectedItems;
+        int remainingCapacity = capacity;
+
+        for (int i = n; i > 0 && remainingCapacity > 0; --i)
+        {
+            if (dp[i][remainingCapacity] != dp[i - 1][remainingCapacity])
+            {
+                selectedItems.push_back(items[i-1]);
+                remainingCapacity -= items[i - 1].weight;
+            }
+        }
+
+        cout << "\nItems selected for production scheduling based on capacity:\n";
+        for (const auto &idx : selectedItems)
+        {
+            cout << "Item " << idx.id << " (Weight: " << idx.weight << ", Profit: " << idx.profit << ", Deadline: " << idx.deadline << ")\n";
+        }
+        cout << "Save data to log?(y/n)" << endl;
+        char x;
+        cin >> x;
+        if (x == 'y')
+        {
+            vector<int> data;
+            for (const auto &idx : selectedItems)
+            {
+                data.push_back(idx.id);
+            }
+            compressTextFile(selectedItems, outputFile, "output");
+        }
+        else
+        {
+            cout << "Data not saved!" << endl;
+        }
+    }
+    void calculateProductionInventoryDeadlineandCapacity(vector<item> &items, ofstream &outputFile)
+    {
+        int n = items.size();
+        vector<pair<int, pair<int, int>>> sortedItems;
+
+        for (int i = 0; i < n; ++i)
+        {
+            sortedItems.push_back({items[i].deadline, {items[i].weight, items[i].profit}});
+        }
+
+        sort(sortedItems.begin(), sortedItems.end());
+
+        vector<bool> filled(n, false);
+        vector<item> filledItems;
+        int totalProfit = 0;
+
+        cout << "\nItems selected for production scheduling based on deadlines:\n";
+        for (int i = 0; i < n; ++i)
+        {
+            int deadline = sortedItems[i].first;
+            int weight = sortedItems[i].second.first;
+            int profit = sortedItems[i].second.second;
+
+            for (int j = min(n, deadline) - 1; j >= 0; --j)
+            {
+                if (!filled[j])
+                {
+                    filled[j] = true;
+                    totalProfit += profit;
+                    filledItems.push_back(items[i]);
+                    cout << "Item " << items[i].id << " (Weight: " << weight << ", Profit: " << profit << ", Deadline: " << deadline << ")\n";
+                    break;
+                }
+            }
+        }
+        cout << "Now calculating the items that can be transported today based on capacity" << endl;
+        int capacity;
+        cout << "Enter capacity: ";
+        cin >> capacity;
+
+        calculateProductionInventoryCapacity(filledItems, capacity, outputFile);
+    }
+
+    
+};
 
 int main()
 {
@@ -724,7 +723,7 @@ int main()
                 }
                 case 2:
                 {
-                    // average rate path here
+                    //average rate path here
                 }
                 break;
                 }
@@ -746,9 +745,9 @@ int main()
 
         {
             vector<item> items;
-            vector<int> weights = {2, 3, 1, 4, 8, 3, 5, 1, 2, };
-            vector<int> profits = {10, 20, 15, 30, 12, 15, 17, 18, 20};
-            vector<int> deadlines = {3, 1, 2, 4, 5, 1, 2, 6, 2};
+            vector<int> weights = {2, 3, 1, 4, 8, 3, 5, 1, 2, 4, 6};
+            vector<int> profits = {10, 20, 15, 30, 12, 15, 17, 18, 20, 11, 14};
+            vector<int> deadlines = {3, 1, 2, 4, 5, 1, 2, 6, 2, 1, 8};
 
             // Create items vector
             for (int i = 0; i < weights.size(); ++i)
@@ -757,9 +756,9 @@ int main()
             }
 
             cout << "Choose an option for production inventory:" << endl;
-            cout << "1. Maximise production profit based on unlimited production capacity but strict deadline" << endl;
-            cout << "2. Maximise production profit based on unlimited deadline but strict production capacity" << endl;
-            cout << "3. Maximise production profit based on strict deadline and strict production capacity" << endl;
+            cout << "1. Based on Deadline (Greedy Algorithm)" << endl;
+            cout << "2. Based on Capacity (0/1 Knapsack Algorithm)" << endl;
+            cout << "3. Based on both" << endl;
 
             int prodOption;
             cin >> prodOption;
@@ -815,9 +814,8 @@ int main()
             string encodedText = readEncodedTextFromFile("output.txt");
             cout << encodedText << endl;
             string decodedText = decodeHuffmanText(encodedText, huffmanMap);
-            for (int i = 0; i < decodedText.length(); i++)
-            {
-                cout << "Item id: " << decodedText[i] << endl;
+            for(int i=0; i<decodedText.length(); i++){
+                cout<<"Item id: "<<decodedText[i]<<endl;
             }
             // cout << "Decoded Text:\n"
             //      << decodedText << endl;
