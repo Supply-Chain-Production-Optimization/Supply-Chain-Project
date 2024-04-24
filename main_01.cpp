@@ -22,8 +22,8 @@ public:
 class Graph
 {
 public:
-    vector<SupplyLocation> suppliers;         // Vector to store supplier locations
-    vector<vector<pair<int, int>>> adjacency; // Adjacency list to store edges
+    vector<SupplyLocation> suppliers;    // Vector to store supplier locations
+    vector<vector<pair<int,int> > > adjacency; // Adjacency list to store edges
 
     // Function to add a supplier to the graph
     void addSupplier(const string &name, float rate)
@@ -37,8 +37,8 @@ public:
     // Function to add an edge between two suppliers in the graph
     void addEdge(int from, int to, int cost)
     {
-        adjacency[from].push_back({to, cost});
-        adjacency[to].push_back({from, cost});
+        adjacency[from].push_back({to,cost});
+        adjacency[to].push_back({from,cost});
     }
 
     // Function to display all suppliers and edges in the graph
@@ -46,7 +46,7 @@ public:
     {
         for (int i = 0; i < suppliers.size(); ++i)
         {
-            cout << "Name: " << suppliers[i].name << " | Connected Places: ";
+            cout << "Name: " << suppliers[i].name << " | Direct Connection List: ";
             for (int j = 0; j < adjacency[i].size(); ++j)
             {
                 int connectedIndex = adjacency[i][j].first;
@@ -59,56 +59,151 @@ public:
         }
     }
 
-    vector<int> dijkstras()
-    {
-        vector<int> dist(40, N);
-        priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> q;
-        q.push({0, 0});
-        dist[0] = 0;
-        while (!q.empty())
-        {
-            int d = q.top().first;
-            int node = q.top().second;
-            q.pop();
-            for (auto it : adjacency[node])
-            {
-                if (dist[it.first] > d + it.second)
-                {
-                    dist[it.first] = d + it.second;
-                    q.push({dist[it.first], it.first});
-                }
+    vector<int> dijkstras(int src){
+    vector<int> dist(40,N);
+    priority_queue<pair<int,int>, vector<pair<int,int> >, greater<pair<int,int> > > q;
+    q.push({0,src});
+    dist[0] = 0;
+    while(!q.empty()){
+        int d = q.top().first;
+        int node = q.top().second;
+        q.pop();
+        for(auto it: adjacency[node]){
+            if(dist[it.first]>d+it.second){      
+                dist[it.first] = d + it.second;
+                q.push({dist[it.first],it.first});
             }
         }
-        return dist;
+    }
+    return dist;
     }
 
     // To find the cheapest supplier from the source location -->
-    pair<SupplyLocation, int> findCheapestSupplier()
-    {
+    pair<SupplyLocation,int> findCheapestSupplier(){
         int minCost = N;
         int minCostIndex = -1;
-        vector<int> cost = dijkstras();
+        vector<int> cost = dijkstras(0);
         // Finding the cost from the starting supplier -->
-        minCost = min(cost[18], min(cost[21], min(cost[27], min(cost[29], min(cost[35], cost[39])))));
-        if (minCost == cost[18])
-            minCostIndex = 18;
-        else if (minCost == cost[21])
-            minCostIndex = 21;
-        else if (minCost == cost[27])
-            minCostIndex = 27;
-        else if (minCost == cost[29])
-            minCostIndex = 29;
-        else if (minCost == cost[35])
-            minCostIndex = 35;
-        else
-            minCostIndex = 39;
-        if (minCostIndex != -1)
-            return {suppliers[minCostIndex], minCost};
+        minCost = min(cost[18],min(cost[21],min(cost[27],min(cost[29],min(cost[35],cost[39]) ) ) ) );
+        if(minCost==cost[18])    minCostIndex = 18;
+        else if(minCost==cost[21])  minCostIndex = 21;
+        else if(minCost==cost[27])  minCostIndex = 27;    
+        else if(minCost==cost[29])  minCostIndex = 29;
+        else if(minCost==cost[35])  minCostIndex = 35;
+        else    minCostIndex = 39;
+        if(minCostIndex!=-1)
+            return {suppliers[minCostIndex],minCost};
+        else{
+            cout<<"No supplier found.\n";
+            return {SupplyLocation("", 0.0),0};
+        }
+    }
+
+    void dfs_rate(vector<int> &path_visited, vector<int> &visited, int i, int dest, int n, float &rating, int &length)
+    {
+        visited[i] = 1;
+        path_visited[i] = 1;
+        if (i != dest)
+        {
+            for (auto j : adjacency[i])
+            {
+                if (!visited[j.first])
+                    dfs_rate(path_visited, visited, j.first, dest, n, rating, length);
+            }
+        }
         else
         {
-            cout << "No supplier found.\n";
-            return {SupplyLocation("", 0.0), 0};
+            for (int j = 0; j < n; j++)
+            {
+                if (path_visited[j] == 1)
+                {
+                    rating += suppliers[j].ratings;
+                    length++;
+                }
+            }
         }
+        path_visited[i] = 0;
+    }
+
+    // For finding the path from source location to destination -->
+    void path_rate(int src, int dest, float &rating, int &length)
+    {
+        int n = suppliers.size();
+        vector<int> visited(n, 0);
+        vector<int> path_visited(n, 0);
+        for (int i = 0; i < n; i++)
+        {
+            if (!visited[i] && i == src)
+            {
+                dfs_rate(path_visited, visited, i, dest, n, rating, length);
+            }
+        }
+    }
+
+    // To find the highest rated location of a given category from the source location -->
+    pair<SupplyLocation,pair<int,float> > findBestSupplier(){
+        int max_rating = 0;
+        int dist;
+        float rate;
+        SupplyLocation ans;
+        vector<int> cost = dijkstras(0);
+        float rate1 = 0; int length1 = 0;
+        float rate2 = 0; int length2 = 0;
+        float rate3 = 0; int length3 = 0;
+        float rate4 = 0; int length4 = 0;
+        float rate5 = 0; int length5 = 0;
+        float rate6 = 0; int length6 = 0;
+        path_rate(0,18,rate1,length1);
+        path_rate(0,21,rate2,length2);
+        path_rate(0,27,rate3,length3);
+        path_rate(0,29,rate4,length4);
+        path_rate(0,35,rate5,length5);
+        path_rate(0,39,rate6,length6);
+
+        float path1 = rate1/length1;
+        float path2 = rate2/length2;
+        float path3 = rate3/length3;
+        float path4 = rate4/length4;
+        float path5 = rate5/length5;
+        float path6 = rate6/length6;
+        
+        if(path1>=path2 && path1>=path3 && path1>=path4 && path1>=path5 && path1>=path6){
+            ans = suppliers[18];
+            dist = cost[18];
+            rate = path1;
+        }
+        
+        if(path2>=path1 && path2>=path3 && path2>=path4 && path2>=path5 && path2>=path6){
+            ans = suppliers[21];
+            dist = cost[21];
+            rate = path2;
+        }
+       
+        if(path3>=path1 && path3>=path2 && path3>=path4 && path3>=path5 && path3>=path6){
+            ans = suppliers[27];
+            dist = cost[27];
+            rate = path3;
+        }
+
+        if(path4>=path1 && path4>=path2 && path4>=path3 && path4>=path5 && path4>=path6){
+            ans = suppliers[29];
+            dist = cost[29];
+            rate = path4;
+        }
+
+        if(path5>=path1 && path5>=path2 && path5>=path3 && path5>=path4 && path5>=path6){
+            ans = suppliers[35];
+            dist = cost[35];
+            rate = path5;
+        }
+
+        if(path6>=path1 && path6>=path2 && path6>=path3 && path6>=path4 && path6>=path5){
+            ans = suppliers[39];
+            dist = cost[39];
+            rate = path6;
+        }
+        
+        return {ans,{dist,rate}};
     }
 
     // For traversing the paths to finally reach the destination starting from source -->
@@ -127,7 +222,7 @@ public:
         else
         {
             int cnt = 1;
-            for (int j = 0; j < n; j++)
+            for (int j = n-1; j >= 0; j--)
             {
                 if (path_visited[j] == 1 && cnt != 1)
                 {
@@ -167,7 +262,75 @@ public:
         }
         return -1;
     }
+
+    // The results are being loaded based on the keyword you typed -->
+ 
+    void KMPSearch(string pat, string txt, bool &flag){
+        int m = pat.length();
+        int n = txt.length();
+        int lps[m];
+        computeLPSArray(pat, m, lps);
+        
+        int i = 0; // index for the string
+        int j = 0; // index for the pattern
+        while ((n - i) >= (m - j)) {
+            if(pat[j]==txt[i] || pat[j]==txt[i]-32 || pat[j]==txt[i]+32) {
+                j++;
+                i++;
+            }
+            if(j==m){
+                flag = 1;
+                return ;
+            }
+            else if(i<n && pat[j]!=txt[i]) {
+                if(j!=0)
+                    j = lps[j-1];
+                else
+                    i = i + 1;
+            }
+        }
+    }
+
+    void computeLPSArray(string pat, int m, int* lps)
+    {
+        int len = 0;
+        lps[0] = 0;
+
+        int i = 1;
+        while (i < m) {
+            if (pat[i]==pat[len] || pat[i]==pat[len]-32 || pat[i]==pat[len]+32) {
+                len++;
+                lps[i] = len;
+                i++;
+            }
+            else{
+                if (len!=0){
+                    len = lps[len - 1];
+                }
+                else{
+                    lps[i] = 0;
+                    i++;
+                }
+            }
+        }
+    }
+
+    vector<SupplyLocation> search_supplier(string search){
+        int cnt = 1;
+        vector<SupplyLocation> results;
+        for(int i=0;i<40;i++){
+            bool flag = 0;
+            KMPSearch(search,suppliers[i].name,flag);
+            if(flag){  
+                cout << cnt << ".) Name: " << suppliers[i].name<<endl;
+                results.push_back(suppliers[i]);
+                cnt++;
+            }
+        }
+        return results;
+    }
 };
+
 class item
 {
 public:
@@ -547,103 +710,103 @@ int main()
 
     // Add locations to the graph
 
-    // Noida to Delhi Lane(Blue Line) -->
-    locationGraph.addSupplier("JIIT 62", 4.1);
-    locationGraph.addSupplier("Ithum", 4.3);
-    locationGraph.addSupplier("3rd Wave Coffee", 4.7);
-    locationGraph.addSupplier("Haldirams", 4.0);
-    locationGraph.addSupplier("Fortis Hospital", 4.5);
-    locationGraph.addSupplier("Mithaas", 4.6);
-    locationGraph.addSupplier("Kailash Hospital", 4.0);
-    locationGraph.addSupplier("Iskcon", 4.1);
-    locationGraph.addSupplier("Logix", 4.7);
-    locationGraph.addSupplier("Metro Multi Speciality hospital", 4.2);
-    locationGraph.addSupplier("The Great Kebab Factory", 4.2);
-    locationGraph.addSupplier("Golf Course", 3.9);
-    locationGraph.addSupplier("Botanical Garden", 4.1);
-    locationGraph.addSupplier("Wave Mall", 4.5);
-    locationGraph.addSupplier("DLF Mall", 4.9);
-    locationGraph.addSupplier("Felix hospital", 3.9);
-    locationGraph.addSupplier("Akshardham", 5.0);
-    locationGraph.addSupplier("Pragati Maidan", 3.5);
-    locationGraph.addSupplier("Cannaught Palace", 4.6);
+    // First Supplier Chain -->
+    locationGraph.addSupplier("The Underdogs", 4.1); // --> This is our manufacturer and all the rest are acting as suppliers for him/her.
+    locationGraph.addSupplier("Star Enterprises", 4.3);
+    locationGraph.addSupplier("Royal Imports", 4.7);
+    locationGraph.addSupplier("Bright Future Industries", 4.0);
+    locationGraph.addSupplier("Evergreen Suppliers", 4.5);
+    locationGraph.addSupplier("Radiant Exports", 4.6);
+    locationGraph.addSupplier("Unity Merchants", 4.0);
+    locationGraph.addSupplier("Crystal Clear Trading", 4.1);
+    locationGraph.addSupplier("Victory Ventures", 4.7);
+    locationGraph.addSupplier("Sapphire Enterprises", 4.2);   
+    locationGraph.addSupplier("Oceanic Imports", 4.2);
+    locationGraph.addSupplier("Elite Suppliers Pvt. Ltd.", 3.9);
+    locationGraph.addSupplier("Sunrise Trading Co.", 4.1);
+    locationGraph.addSupplier("Silverline Merchants", 4.5);
+    locationGraph.addSupplier("Perfect Partnerships", 4.9);
+    locationGraph.addSupplier("Divine Exports", 3.9);
+    locationGraph.addSupplier("Zenith Enterprises", 5.0);
+    locationGraph.addSupplier("Global Traders Co.", 3.5);
+    locationGraph.addSupplier("Sunshine Suppliers", 4.6);
 
-    // 128 lane -->
-    locationGraph.addSupplier("Karigari Restaurent(By : Harpal Singh)", 4.2);
-    locationGraph.addSupplier("Shopprix Mall", 4.8);
-    locationGraph.addSupplier("JIIT 128", 4.2);
+    // Second Supplier Chain -->
+    locationGraph.addSupplier("Harmony Distributors", 4.2);
+    locationGraph.addSupplier("Aneja and Sons", 4.8);
+    locationGraph.addSupplier("SilverPeak Suppliers", 2.3);
 
-    // Botanical Lane -->
-    locationGraph.addSupplier("Thios", 4.4);
-    locationGraph.addSupplier("Okhla Bird Sanctuary", 4.5);
-    locationGraph.addSupplier("The Saffron Boutique", 4.4);
-    locationGraph.addSupplier("Jamia Milia Islamia", 3.7);
-    locationGraph.addSupplier("Kalkaji Mandir", 4.6);
-    locationGraph.addSupplier("Hauz Khaas", 4.6);
+    // Third Supplier Chain -->
+    locationGraph.addSupplier("BrightStar Suppliers", 4.4);
+    locationGraph.addSupplier("NexusSupply Co.", 4.5);
+    locationGraph.addSupplier("InfiniteGoods", 4.4);
+    locationGraph.addSupplier("SwiftSource Suppliers", 3.7);
+    locationGraph.addSupplier("Stellar Supply Solutions", 4.6);
+    locationGraph.addSupplier("Horizon Traders", 4.6);
 
-    // Pragati Maidan -->
-    locationGraph.addSupplier("Mandi House", 3.6);
-    locationGraph.addSupplier("Khan Market", 4.9);
+    // Fourth Supplier Chain -->
+    locationGraph.addSupplier("Nova Merchandise", 3.6);
+    locationGraph.addSupplier("Prime Partners Supply", 4.9);
 
-    // Cannaught Palace -->
-    locationGraph.addSupplier("New Delhi", 4.6);
-    locationGraph.addSupplier("A.I.I.M.S. hospital", 4.6);
-    locationGraph.addSupplier("Chawri Bazaar", 4.2);
-    locationGraph.addSupplier("Chandni Chowk", 4.0);
-    locationGraph.addSupplier("Red Fort", 5.0);
-    locationGraph.addSupplier("Majnu ka tila", 4.8);
+    // Fifth Supplier Chain -->
+    locationGraph.addSupplier("Zenith Suppliers", 4.6);
+    locationGraph.addSupplier("Aurora Importers", 4.6);
+    locationGraph.addSupplier("Crestline Distributors", 4.2);
+    locationGraph.addSupplier("Fusion Trade Co.", 4.0);
+    locationGraph.addSupplier("Summit Suppliers", 5.0);
+    locationGraph.addSupplier("Harmony Goods Inc.", 4.8);
 
-    // Noida to Ghaziabad -->
-    locationGraph.addSupplier("Shipra Mall", 3.8);
-    locationGraph.addSupplier("Shipra Market", 4.5);
-    locationGraph.addSupplier("Habitat", 4.6);
-    locationGraph.addSupplier("Windsor Street", 5.0);
+    // Sixth Supplier Chain -->
+    locationGraph.addSupplier("Oasis Imports", 3.8);
+    locationGraph.addSupplier("ZenTrade Suppliers", 4.1);
+    locationGraph.addSupplier("Apex Merchants", 3.5);
+    locationGraph.addSupplier("Phoenix Procurement Group", 3.4);
 
     // Connecting edges in the graph
-    locationGraph.addEdge(0, 1, 543);   // JIIT 62 to Ithum
-    locationGraph.addEdge(1, 2, 728);   // Ithum to 3rd Wave Coffee
-    locationGraph.addEdge(2, 3, 225);   // 3rd Wave Coffee to Haldirams
-    locationGraph.addEdge(3, 4, 642);   // Haldirams to Fortis Hospital
-    locationGraph.addEdge(4, 5, 189);   // Fortis to Mithaas
-    locationGraph.addEdge(5, 6, 547);   // Mithaas to Kailash
-    locationGraph.addEdge(6, 7, 427);   // Kailash to Iskcon
-    locationGraph.addEdge(7, 8, 301);   // Isckon to Logix
-    locationGraph.addEdge(8, 9, 883);   // Logix to Metro Multi Speciallity hospital
-    locationGraph.addEdge(9, 10, 946);  // Metro Multi Speciallity hospital to The Great Kebab factory
-    locationGraph.addEdge(10, 11, 549); // The Great Kebab Factory to Golfcourse
-    locationGraph.addEdge(11, 12, 854); // Golf Course to Botanical
-    locationGraph.addEdge(12, 13, 108); // Botanical to Wave
-    locationGraph.addEdge(13, 14, 388); // Wave to DLF
-    locationGraph.addEdge(14, 15, 825); // DLF to Felix
-    locationGraph.addEdge(15, 16, 732); // Felix to Akshardham
-    locationGraph.addEdge(16, 17, 430); // Akshardham to Pragati Maidan
-    locationGraph.addEdge(17, 18, 901); // Pragati to Cannaught
+    locationGraph.addEdge(0, 1, 543);   // The Underdogs to Star Enterprises
+    locationGraph.addEdge(1, 2, 728);   // Star Enterprises to Royal Imports
+    locationGraph.addEdge(2, 3, 225);   // Royal Imports to Bright Future Industries
+    locationGraph.addEdge(3, 4, 642);   // Bright Future Industries to Evergreen Suppliers
+    locationGraph.addEdge(4, 5, 189);   // Evergreen Suppliers to Radiant Exports
+    locationGraph.addEdge(5, 6, 547);   // Radiant Exports to Unity Merchants
+    locationGraph.addEdge(6, 7, 427);   // Unity Merchants to Crystal Clear Trading
+    locationGraph.addEdge(7, 8, 301);   // Crystal Clear Trading to Victory Ventures
+    locationGraph.addEdge(8, 9, 883);   // Victory Ventures to Sapphire Enterprises
+    locationGraph.addEdge(9, 10, 946);  // Sapphire Enterprises to Oceanic Imports
+    locationGraph.addEdge(10, 11, 549); // Oceanic Imports to Elite Suppliers Pvt. Ltd.
+    locationGraph.addEdge(11, 12, 854); // Elite Suppliers Pvt. Ltd. to Sunrise Trading Co.
+    locationGraph.addEdge(12, 13, 108); // Sunrise Trading Co. to Silverline Merchants
+    locationGraph.addEdge(13, 14, 388); // Silverline Merchants to Perfect Partnerships
+    locationGraph.addEdge(14, 15, 825); // Perfect Partnerships to Divine Exports
+    locationGraph.addEdge(15, 16, 732); // Divine Exports to Zenith Enterprises
+    locationGraph.addEdge(16, 17, 430); // Zenith Enterprises to Global Traders Co.
+    locationGraph.addEdge(17, 18, 901); // Global Traders Co. to Sunshine Suppliers
 
-    locationGraph.addEdge(5, 19, 621);  // Mithaas to Karigari
-    locationGraph.addEdge(19, 20, 264); // Karigari to Shopprix
-    locationGraph.addEdge(20, 21, 929); // Shopprix to JIIT 128
+    locationGraph.addEdge(5, 19, 621);  // Radiant Exports to Harmony Distributors
+    locationGraph.addEdge(19, 20, 264); // Harmony Distributors to Aneja and Sons
+    locationGraph.addEdge(20, 21, 929); // Aneja and Sons to SilverPeak Suppliers
 
-    locationGraph.addEdge(12, 22, 438); // Botanical to Thios
-    locationGraph.addEdge(22, 23, 172); // Thios to Okhla
-    locationGraph.addEdge(23, 24, 275); // Okhla to The Saffron Boutique
-    locationGraph.addEdge(24, 25, 800); // The Saffron Boutique to Jamia
-    locationGraph.addEdge(25, 26, 629); // Jamia to Kalkaji
-    locationGraph.addEdge(26, 27, 142); // Kalkaji to Hauz Khaas
+    locationGraph.addEdge(12, 22, 438);  // Sunrise Trading Co. to BrightStar Suppliers
+    locationGraph.addEdge(22, 23, 172);  // BrightStar Suppliers to NexusSupply Co.
+    locationGraph.addEdge(23, 24, 275);  // NexusSupply Co. to The InfiniteGoods
+    locationGraph.addEdge(24, 25, 800);  // The InfiniteGoods to SwiftSource Suppliers
+    locationGraph.addEdge(25, 26, 629);  // SwiftSource Suppliers to Stellar Supply Solutions
+    locationGraph.addEdge(26, 27, 142);  // Stellar Supply Solutions to Horizon Traders
 
-    locationGraph.addEdge(17, 28, 463); // Pragati to Mandi House
-    locationGraph.addEdge(28, 29, 540); // Mandi House to Khan Market
+    locationGraph.addEdge(17, 28, 463); // Global Traders Co. to Nova Merchandise
+    locationGraph.addEdge(28, 29, 540); // Nova Merchandise to Prime Partners Supply
 
-    locationGraph.addEdge(18, 30, 705); // Cannaught Palace to New Delhi
-    locationGraph.addEdge(30, 31, 663); // New Delhi to AIIMS
-    locationGraph.addEdge(31, 32, 796); // AIIMS to Chawri Bazar
-    locationGraph.addEdge(32, 33, 654); // Chawri Bazar to Chandni Chowk
-    locationGraph.addEdge(33, 34, 611); // Chandni Chowk to Red Fort
-    locationGraph.addEdge(34, 35, 724); // Red Fort to Majnu ka tila
+    locationGraph.addEdge(18, 30, 705); // Cannaught Palace to Zenith Suppliers
+    locationGraph.addEdge(30, 31, 663); // Zenith Suppliers to Aurora Importers
+    locationGraph.addEdge(31, 32, 796); // Aurora Importers to Crestline Distributors
+    locationGraph.addEdge(32, 33, 654); // Crestline Distributors to Fusion Trade Co.
+    locationGraph.addEdge(33, 34, 611); // Fusion Trade Co. to Summit Suppliers
+    locationGraph.addEdge(34, 35, 724); // Summit Suppliers to Harmony Goods Inc.
 
-    locationGraph.addEdge(0, 36, 857);  // JIIT 62 to Shipra Mall
-    locationGraph.addEdge(36, 37, 764); // Shipra Mall to Shipra Market
-    locationGraph.addEdge(37, 38, 585); // Shipra Market to Habitat
-    locationGraph.addEdge(38, 39, 981); // Habitat to Windsor Street
+    locationGraph.addEdge(0, 36, 1000);  // Sunshine Suppliers to Oasis Imports
+    locationGraph.addEdge(36, 37, 2345); // Oasis Imports to ZenTrade Suppliers
+    locationGraph.addEdge(37, 38, 3456); // ZenTrade Suppliers to Apex Merchants
+    locationGraph.addEdge(38, 39, 100); // Apex Merchants to Phoenix Procurement Group
 
     int option;
     cout << "Choose an option:" << endl;
@@ -659,86 +822,181 @@ int main()
         case 1:
         {
             // Display all locations and edges in the graph
-            cout << endl
-                 << endl;
-            cout << " *********************" << endl;
-            cout << "| Available locations |" << endl;
-            cout << " *********************" << endl
-                 << endl;
+    cout << endl
+         << endl;
+    cout << " *********************" << endl;
+    cout << "| Available Suppliers |" << endl;
+    cout << " *********************" << endl
+         << endl;
 
-            locationGraph.displayGraph();
+    locationGraph.displayGraph();
 
-            char a;
-            cout << endl
-                 << endl
-                 << "Do you want to visit any of the above given locations(y/n):";
-            cin >> a;
-            system("CLS");
-            switch (a)
-            {
+    char a;
+    cout << endl
+         << endl
+         << "Do you want to search your supplier or want to get our assistance on cracking your supplier chain(s/a):";
+    cin >> a;
+    system("CLS");
+    switch (a)
+    {
+    case 'a':
+    {
+        cout << endl
+             << "Ahhhh shit, Here you are again!!!" << endl;
 
-            case 'y':
-            {
-                cout << endl
-                     << "Ahhhh shit, Here you are again!!!" << endl;
-
-                cout << endl
-                     << endl
-                     << "Choose wisely as your \'SAFAR\' should not become a \'SUFFER\' for you" << endl;
-                cout << "**********************************************************************" << endl;
-                cout << "1.) SEARCH BY MINIMUM COST" << endl;
-                cout << endl
-                     << "2.) SEARCH BY MAXIMUM AVERAGE RATING" << endl;
-                cout << endl;
-                fflush(stdin);
-                int b;
-                cout << endl
-                     << endl
-                     << "Enter your prefered option : ";
-                fflush(stdin);
-                cin >> b;
-                switch (b)
-                {
-                case 1:
-                {
-                    // Here, place is suggested according to minimum cost -->
-                    SupplyLocation cheapest = locationGraph.findCheapestSupplier().first;
-
-                    // Event e(day, name, h, nearest.name, nearest.category);
-                    // addEventtofile(e);
-                    cout << endl
-                         << endl
-                         << "Min. cost supply chain --> "
-                         << "Name: " << cheapest.name << endl;
-                    cout << "**********************" << endl
-                         << endl;
-                    cout << "Min. cost required =  Rs. " << locationGraph.findCheapestSupplier().second << endl
-                         << endl;
-                    cout << "Your supply chain looks like this :- " << endl;
+        cout << endl
+             << endl
+             << "Choose wisely as your \'SAFAR\' should not become a \'SUFFER\' for you" << endl;
+        cout << "**********************************************************************" << endl;
+        cout << "1.) SEARCH BY MINIMUM COST"<<endl;
+        cout << endl
+             << "2.) SEARCH BY MAXIMUM AVERAGE RATING" << endl;
+        cout << endl;
+        fflush(stdin);
+        int b;
+        cout << endl
+             << endl
+             << "Enter your prefered option : ";
+        fflush(stdin);
+        cin >> b;
+        switch (b)
+        {
+        case 1:
+        {
+            // Here, place is suggested according to minimum cost -->
+            SupplyLocation cheapest = locationGraph.findCheapestSupplier().first;
+            
+            // Event e(day, name, h, nearest.name, nearest.category);
+            // addEventtofile(e);
+            cout<<endl<<endl<<"Min. cost supply chain --> "<<"Name: "<<cheapest.name<<endl;
+                    cout<<"**********************"<<endl<<endl;
+                    cout<<"Min. cost required =  Rs. "<<locationGraph.findCheapestSupplier().second<<endl<<endl;
+                    cout<<"Your supply chain looks like this :- "<<endl;   
                     int src = 0;
                     int cheapest_dest = locationGraph.search_in_graph(cheapest);
-                    locationGraph.path(src, cheapest_dest);
-                    cout << endl
-                         << endl;
+                    locationGraph.path(src,cheapest_dest);
+                    cout<<endl<<endl;
+                    break;
+        }
+        case 2:{
+            // Here, place is suggested according to rating -->
+            pair<SupplyLocation,pair<int,float> > Best = locationGraph.findBestSupplier();
+            SupplyLocation best = Best.first;
+
+            // Event e(day, name, h, best.name, best.category);
+            // addEventtofile(e);
+            cout<<endl<<endl<<"Best supplier chain --> "<<"Name: "<<best.name<<endl;
+                    cout<<"*******************"<<endl<<endl;
+                    cout<<"Cost = Rs. "<<Best.second.first<<endl<<endl;
+                    cout<<"Average Rating = "<<Best.second.second<<endl<<endl;
+                    cout<<"Your supplier chain :- "<<endl;  
+                    int src = 0; 
+                    int best_dest = locationGraph.search_in_graph(best);
+                    locationGraph.path(src,best_dest);
+                    cout<<endl<<endl;
                     break;
                 }
-                case 2:
-                {
-                    // average rate path here
-                }
-                break;
-                }
-                break;
+        }
+        break;
+    }
+    case 's':
+    {
+        cout << endl
+             << "Search your trusted supplier and get to know everything about him!!!" << endl;
+
+        cout << endl
+             << endl
+             << "DO YOU HAVE ALL THE RAW MATERIALS REQUIRED BY YOUR SUPPLIER" << endl;
+        cout << "***********************************************************" << endl;
+        cout << "1.) OF COURSE, I DO HAVE ALL OF THEM"<<endl;
+        cout << endl
+             << "2.) I'M AFRAID BUT I DON'T HAVE ANYTHING IN PRIOR"<< endl;
+        cout << endl;
+        fflush(stdin);
+        int b;
+        cout << endl
+             << endl
+             << "Enter your prefered option : ";
+        fflush(stdin);
+        cin >> b;
+        switch (b)
+        {
+        case 1:
+        {
+            int choose;
+            string search;
+            cout<<"Enter the search string:";
+            cin>>search;
+            vector<SupplyLocation> results = locationGraph.search_supplier(search);
+            cout<<"Choose One --> ";
+            cin>>choose;
+            system("CLS");
+            vector<int> ans = locationGraph.dijkstras(0);
+            int search_result = locationGraph.search_in_graph(results[choose-1]);
+            cout<<"For the given Supplier -->"<<endl;
+            cout<<"**************************"<<endl<<endl; 
+            cout<<"Name = "<<results[choose-1].name<<endl;
+            cout<<"Rating = "<<results[choose-1].ratings<<endl;
+            cout<<"Cost = "<<ans[search_result]<<endl;
+            cout<<"Your supplier chain :- "<<endl;  
+                    int src = 0; 
+                    locationGraph.path(src,search_result);
+                    cout<<endl<<endl;
+                    break;
+        }
+        case 2:{
+            int choose;
+            string search;
+            cout<<"Enter the search string:";
+            cin>>search;
+            vector<SupplyLocation> results = locationGraph.search_supplier(search);
+            cout<<"Choose One --> ";
+            cin>>choose;
+            system("CLS");
+            vector<int> ans = locationGraph.dijkstras(0);
+            int search_result = locationGraph.search_in_graph(results[choose-1]);
+            cout<<"For the given Supplier -->"<<endl;
+            cout<<"**************************"<<endl<<endl; 
+            cout<<"Name = "<<results[choose-1].name<<endl;
+            cout<<"Rating = "<<results[choose-1].ratings<<endl;
+            vector<int> cost = locationGraph.dijkstras(search_result);
+            int minCost, minCostIdx;
+            if(cost[18]<=cost[21] && cost[18]<=cost[27] && cost[18]<=cost[29] && cost[18]<=cost[35] && cost[18]<=cost[39]){
+                minCost = cost[18];
+                minCostIdx = 18;
             }
-            break;
-            case 'n':
-            {
-                cout << "You chose n" << endl;
-                // continue;
+            if(cost[21]<=cost[18] && cost[21]<=cost[27] && cost[21]<=cost[29] && cost[21]<=cost[35] && cost[21]<=cost[39]){
+                minCost = cost[21];
+                minCostIdx = 21;
             }
-            break;
+            if(cost[27]<=cost[18] && cost[27]<=cost[21] && cost[27]<=cost[29] && cost[27]<=cost[35] && cost[27]<=cost[39]){
+                minCost = cost[27];
+                minCostIdx = 27;
             }
-            break;
+            if(cost[29]<=cost[18] && cost[29]<=cost[21] && cost[29]<=cost[27] && cost[29]<=cost[35] && cost[29]<=cost[39]){
+                minCost = cost[29];
+                minCostIdx = 29;
+            }
+            if(cost[35]<=cost[18] && cost[35]<=cost[21] && cost[35]<=cost[27] && cost[35]<=cost[29] && cost[35]<=cost[39]){
+                minCost = cost[35];
+                minCostIdx = 35;
+            }
+            if(cost[39]<=cost[18] && cost[39]<=cost[21] && cost[39]<=cost[27] && cost[39]<=cost[29] && cost[39]<=cost[35]){
+                minCost = cost[39];
+                minCostIdx = 39;
+            }
+            cout<<"Total Cost = "<<minCost + ans[search_result]<<endl<<endl;
+            cout<<"Recommended supplier chain :- "<<endl;
+            cout<<"*****************************"<<endl<<endl;
+                    int src = 0; 
+                    locationGraph.path(src,minCostIdx);
+                    cout<<endl<<endl;
+                    break;
+        }
+    }
+    break;
+}
+} 
         }
         break;
 
