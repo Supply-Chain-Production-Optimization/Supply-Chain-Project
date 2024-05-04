@@ -1,7 +1,195 @@
+
+#include<iomanip>
+#include <conio.h>
+#include <windows.h>
+#include <unistd.h>
+#include<stdlib.h>
 #include <bits/stdc++.h>
 using namespace std;
 
 const int N = 1e9;
+void gotoXY(int X, int Y)
+{
+    COORD coordinates;
+    coordinates.X = X;
+    coordinates.Y = Y;
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coordinates);
+}
+void border(int xLenS = 2, int yLenS = 2,int xLenE = 76, int yLenE = 22 )
+{   char c1=201;
+    char c2=200;
+    char c3= 205;
+    char c4= 187;
+    char c5= 188;
+	system("cls");
+	gotoXY(xLenS,yLenS);
+	cout<<c1;
+
+	gotoXY(xLenS,yLenE);
+	cout<<c2;
+
+    for(int i=xLenS+1;i<=xLenE-1;i++) //Top and Bottom Border line
+    {
+        gotoXY(i,yLenS);
+        cout<<c3;
+		//puts(style);
+        gotoXY(i,yLenE);
+        //puts(style);
+        cout<<c3;
+
+    }
+    gotoXY(xLenE,yLenS);cout<<c4;
+    gotoXY(xLenE,yLenE);cout<<c5;
+    for(int i=yLenS+1;i<=yLenE-1;i++)         //Left and Right Border Line
+    {
+        gotoXY(xLenS, i);
+        cout<<c4;
+		//puts(style);
+        gotoXY(xLenE, i);
+        cout<<c5;
+		//puts(style);
+    }
+    cout<<endl;
+}
+void loginFrame(int xLenS = 18, int yLenS = 8, int xLenE = 70, int yLenE = 25)
+{
+    border(xLenS,yLenS,xLenE,yLenE);
+}
+void intro()
+{
+	gotoXY(22,4);
+	cout<<("WELCOME TO INVENTORY MANAGEMENT AND SUPPLY CHAIN OPTIMISATION");
+	gotoXY(24,6);
+	cout<<"BUILT BY:";
+	gotoXY(24,8);
+	cout<<"SAUMYA SHARMA\t9922103195";
+	gotoXY(24,10);
+	cout<<"AMAN TYAGI\t 9922103176";
+	gotoXY(24,12);
+	gotoXY(24,14);
+    gotoXY(24,16);
+    cout<<("Press Any key to continue...");
+    getch();
+}
+
+
+    bool userExists(const string& username, const string& password) {
+    ifstream file("Profile.txt");
+    if (file.is_open()) {
+        string line;
+        while (getline(file, line)) {
+            size_t pos = line.find(',');
+            string storedUsername = line.substr(0, pos);
+            string storedPassword = line.substr(pos + 1);
+            if (storedUsername == username && storedPassword == password) {
+                file.close();
+                return true;
+            }
+        }
+        file.close();
+    }
+    return false;
+}
+class customer  // customer class
+{
+	public:
+	    int id;
+	    int age;
+	    int contact;
+    string gen;
+    string pas;
+    string uppas;
+	string customername=" ";
+  //  char data;
+    int login();
+    // variables defined in this class in public mode.
+};
+class profile: public customer{
+public:
+  //  int op;
+   // void write_user();
+   // void update_user();
+   // void displayprof();
+    //void showdata();
+    void registerr(){
+
+    cout<<endl;
+    gotoXY(0,3);
+    cout<<"____________________________________________________________________________"<<endl;
+    gotoXY(29,5);
+    cout<<"REGISTRATION PAGE"<<endl;
+    gotoXY(0,7);
+    cout<<"____________________________________________________________________________"<<endl;
+    gotoXY(20,10);
+    ofstream file1("Profile.txt", ios::app);
+    cout << "Please Enter your ID: ";
+    cin>>id;
+    // file1<<id<<" ";
+    fflush(stdin);
+    gotoXY(20,12);
+    cout << "Please Enter your Name: "; //taking data from the user
+    cin >> customername;
+    cout<<endl;
+    gotoXY(20,13);
+    fflush(stdin);
+    cout<<"Please enter your age: ";
+    cin>>age;
+    // file1<<age<<" ";
+    gotoXY(20,14);
+    cout << "Please Enter your gender (M/F/O): "; //taking data from the user
+    cin >> gen;
+    // file1<<gen<<" ";
+    gotoXY(20,15);
+    cout << "Please enter your password: ";
+    cin >> contact;
+    //file1<<contact<<" ";
+    file1<<customername<<","<<contact<<endl;
+    file1.close();
+    gotoXY(20,22);
+    cout<<"\t\t REGISTERED SUCCESSFULLY!"<<endl;
+    gotoXY(20,23);
+    cout<<"\t\t  LOGIN TO YOUR ACCOUNT"<<endl;
+    system("PAUSE");
+    system("CLS");
+    }
+    void login(){
+   char ch;
+   gotoXY(20,10);
+   cout<<"INVENTORY MANAGEMENT AND SUPPLY CHAIN OPTIMISATION \n\n";
+   gotoXY(20,12);
+   cout<<"------------------------------";
+   gotoXY(20,14);
+   cout<<"LOGIN \n";
+   gotoXY(20,15);
+   cout<<"-----------------------------\n\n";
+   gotoXY(20,17);
+   string username="";
+   string pass="";
+   cout << "Enter Username: ";
+   gotoXY(20,19);
+   cin>>username;
+   fflush(stdin);
+   gotoXY(20,21);
+   cout<<"Enter password";
+   
+   cin>>pass;
+   fflush(stdin);
+   if(userExists(username,pass)){
+    gotoXY(20,23);
+      cout << "Access Granted! \n";
+      system("PAUSE");
+      system ("CLS");
+   }
+   else{
+    cout << "\n\n\t\t\t\t\t\t\tAccess Aborted...\n\t\t\t\t\t\t\tPlease Try Again\n\n";
+      system("PAUSE");
+      system("CLS");
+     login();
+   }
+   
+   }
+ 
+};
 
 // Node class representing a supplier location
 class SupplyLocation
@@ -391,31 +579,43 @@ void buildHuffmanTree(const string &text, ofstream &outputFile)
     {
         freq[ch]++;
     }
-
+    int flag=0;
     priority_queue<MinHeapNode *, vector<MinHeapNode *>, compare> minHeap;
     for (auto &pair : freq)
     {
+
+        //outputFile << "Huffman Codes:\n";
+        //cout<<pair.first<<" "<<pair.second<<endl;
         minHeap.push(new MinHeapNode(pair.first, pair.second));
     }
-
+    unordered_map<char, string> huffmanCode;
+    if(minHeap.size()==1){
+        huffmanCode[text[0]]="0"; 
+        flag=1;              
+    }
     while (minHeap.size() != 1)
     {
         MinHeapNode *left = minHeap.top();
         minHeap.pop();
         MinHeapNode *right = minHeap.top();
         minHeap.pop();
-
+        //unsigned to make sure freq is positive
         unsigned sumFreq = left->freq + right->freq;
         MinHeapNode *newNode = new MinHeapNode('\0', sumFreq);
         newNode->left = left;
         newNode->right = right;
+        //pushing sumfreq as new node
         minHeap.push(newNode);
     }
 
     MinHeapNode *root = minHeap.top();
+    // cout<<*(minHeap.top());
+    if(!flag)
 
-    unordered_map<char, string> huffmanCode;
+    //encode with huffman logic: left=0 right=1
     encode(root, "", huffmanCode);
+    // if(!flag){
+    
     outputFile << "Huffman Codes:\n";
     for (auto &pair : huffmanCode)
     {
@@ -432,8 +632,10 @@ void buildHuffmanTree(const string &text, ofstream &outputFile)
         else
         {
             outputFile << pair.first << " : " << pair.second << '\n';
+            //cout << pair.first << " : " << pair.second << '\n';
         }
     }
+    
     outputFile << '\n';
     string encodedText;
     for (char ch : text)
@@ -451,8 +653,12 @@ void buildHuffmanTree(const string &text, ofstream &outputFile)
             encodedText += huffmanCode[ch];
         }
     }
+
     outputFile << "Encoded Text:\n"
                << encodedText << '\n';
+    cout<< "Encoded Text:\n"
+               << encodedText << '\n';
+    // }
 }
 void compressTextFile(const vector<item> &inputVector, ofstream &outputFile, string FileName)
 {
@@ -706,6 +912,14 @@ unordered_map<string, char> readHuffmanCodesFromFile(const string &fileName)
 
 int main()
 {
+    border();
+    intro();
+    profile p;
+    loginFrame();
+    p.registerr();
+    loginFrame();
+    p.login();
+    system("CLS");
     Graph locationGraph; // Graph to store locations and edges
 
     // Add locations to the graph
